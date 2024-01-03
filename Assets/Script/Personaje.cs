@@ -14,6 +14,10 @@ public class Personaje : MonoBehaviour
     private SpriteRenderer spritePersonaje;
     private float posColX = 1;
     private float posColY = 0;
+    private int vidaPersonaje = 3;
+    private bool estoyHablando;
+
+    [SerializeField] UIManager uIManager;
 
 
     private void Awake()
@@ -25,9 +29,13 @@ public class Personaje : MonoBehaviour
 
     private void Update()
     {
-        if (Input.GetMouseButton(0)) 
+        if (Input.GetMouseButton(0) && estoyHablando == false)
         {
             anim.SetTrigger("Ataca");
+        }
+        if (Input.GetKeyDown(KeyCode.K)) 
+        {
+            CausarHerida();
         }
     }
 
@@ -36,13 +44,22 @@ public class Personaje : MonoBehaviour
         Movimiento();
     }
 
+    public void ChequearSiHablo (bool hablando)
+    {
+        estoyHablando = hablando;
+    }
+
     private void Movimiento()
     {
         float horizontal = Input.GetAxis("Horizontal");
         float vertical = Input.GetAxis("Vertical");
 
-        rig.velocity = new Vector2(horizontal, vertical) * velocidad;
-        anim.SetFloat("Camina", Mathf.Abs(rig.velocity.magnitude));
+        if(estoyHablando == false)
+        {
+            rig.velocity = new Vector2(horizontal, vertical) * velocidad;
+            anim.SetFloat("Camina", Mathf.Abs(rig.velocity.magnitude));
+        }
+        
 
         if (horizontal > 0)
         {
@@ -55,5 +72,34 @@ public class Personaje : MonoBehaviour
             spritePersonaje.flipX = true;
         }
 
+    }
+
+    public void CausarHerida()
+    {
+        if (vidaPersonaje > 0)
+        {
+            vidaPersonaje--;
+            uIManager.RestaCorazones(vidaPersonaje);
+
+            if (vidaPersonaje == 0)
+            {
+                anim.SetTrigger("Muere");
+                Invoke(nameof(Morir), 1f);
+            }
+        }
+    }
+
+    public void SumaVida()
+    {
+        if(vidaPersonaje < 3)
+        {
+            uIManager.SumaCorazones (vidaPersonaje);
+            vidaPersonaje++;
+        }
+    }
+
+    private void Morir()
+    {
+        Destroy(this.gameObject);
     }
 }
